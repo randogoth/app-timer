@@ -6,11 +6,11 @@ timers:
       - xmcl
       - mcpelauncher-ui
     # how many minutes of usage
-    time-limit: 5
+    time-limit: 120
     # within how many hours of interval
-    limit-interval: 4
+    limit-interval: 12
     # warn n minutes before reaching the limit
-    warn-threshold: 4
+    warn-threshold: 5
     # commands run on GNOME to pre-warn/final-warn
     warn-command: >
       runuser -l randogoth -c 'DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "App Timer" "Gaming time is almost up ({time_left_int} min left)" -u critical && canberra-gtk-play -i complete'
