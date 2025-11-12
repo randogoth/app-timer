@@ -2,12 +2,20 @@ check-interval: 1
 timers:
   gaming:
     apps:
-      - retroarch
       - minecraft
+      - xmcl
+      - mcpelauncher-ui
     # how many minutes of usage
-    time-limit: 40
+    time-limit: 5
     # within how many hours of interval
-    limit-interval: 12
+    limit-interval: 4
+    # warn n minutes before reaching the limit
+    warn-threshold: 4
+    # commands run on GNOME to pre-warn/final-warn
+    warn-command: >
+      runuser -l randogoth -c 'DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "App Timer" "Gaming time is almost up ({time_left_int} min left)" -u critical && canberra-gtk-play -i complete'
+    final-warn-command: >
+      runuser -l randogoth -c 'DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "App Timer" "Final minute before shutdown ({time_left_seconds}s)" -u critical && canberra-gtk-play -i alarm-clock-elapsed'
   websurf:
     apps:
       - chrome

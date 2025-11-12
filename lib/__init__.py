@@ -1,3 +1,4 @@
+import math
 import os, time
 import subprocess
 
@@ -27,6 +28,7 @@ class Usage(object):
         super(Usage, self).__init__()
         self.timer = timer
         self.file = '%s/usage/%s' % (CONFIG_PATH, self.timer.name)
+        self.final_warning_sent = False
 
     @property
     def current(self):
@@ -45,7 +47,9 @@ class Usage(object):
 
     def release(self):
         '''Remove the timer usage to restart the counter'''
-        os.remove(self.file)
+        if os.path.exists(self.file):
+            os.remove(self.file)
+        self.final_warning_sent = False
 
     def isOffLimit(self):
         '''Is the timer usage off its limits'''
@@ -99,18 +103,89 @@ class Timer(object):
         apps = [app.strip() for app in item_apps]
         return apps
 
+    @property
+    def warnThreshold(self):
+        threshold = self.item.get('warn-threshold', None)
+        if threshold is None:
+            return None
+        return float(threshold)
+
+    @property
+    def warnCommand(self):
+        return self.item.get('warn-command')
+
+    @property
+    def finalWarnCommand(self):
+        return self.item.get('final-warn-command')
+
+    def _command_context(self, time_left):
+        minutes = max(time_left, 0)
+        seconds = minutes * 60
+        return {
+            'timer_name': self.name,
+            'time_left': minutes,
+            'time_left_int': int(math.ceil(minutes)),
+            'time_left_floor': int(math.floor(minutes)),
+            'time_left_seconds': int(math.ceil(seconds)),
+        }
+
+    def _prepareCommand(self, command, context):
+        if isinstance(command, (list, tuple)):
+            command = ' '.join([str(part) for part in command])
+        if not command:
+            return None
+        context = context or {}
+        try:
+            return command.format(**context)
+        except (KeyError, IndexError, ValueError) as exc:
+            print('Timer %s warning command format error (%s), using raw command' % (self.name, exc))
+            return command
+
+    def _runCommand(self, command, label, context=None):
+        cmd = self._prepareCommand(command, context)
+        if not cmd:
+            return
+        print('Timer %s running %s command: %s' % (self.name, label, cmd))
+        shell(cmd)
+
+    def maybeWarn(self, check_interval):
+        if self.timeLimit < 0:
+            return
+        current_usage = self.usage.current
+        time_left = self.timeLimit - current_usage
+        if time_left <= 0:
+            if self.usage.final_warning_sent:
+                self.usage.final_warning_sent = False
+            return
+        context = self._command_context(time_left)
+        if (self.warnThreshold is not None and self.warnCommand and
+                time_left <= self.warnThreshold):
+            self._runCommand(self.warnCommand, 'warning', context)
+        final_command = self.finalWarnCommand
+        if not final_command:
+            return
+        interval = float(check_interval)
+        if time_left <= interval:
+            if not self.usage.final_warning_sent:
+                self._runCommand(final_command, 'final warning', context)
+                self.usage.final_warning_sent = True
+        else:
+            # reset flag if the next loop is no longer the final one
+            if self.usage.final_warning_sent:
+                self.usage.final_warning_sent = False
+
     def isRunning(self):
         running = False
         for app in self.apps:
-            cmd = 'ps aux | grep -v grep | grep "%s"' % app
+            cmd = 'pgrep -f "%s"' % app
             res = shell(cmd)
-            if len(res):
+            if res.strip():
                 running = True
         return running
 
     def block(self):
         for app in self.apps:
-            cmd = 'killall "%s"' % app
+            cmd = 'pkill -f "%s"' % app
             shell(cmd)
 
 

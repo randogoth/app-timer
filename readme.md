@@ -23,6 +23,21 @@ timers:
     time-limit: 60
     # within how many hours of interval
     limit-interval: 12
+    # optional: warn N minutes before the limit is reached
+    warn-threshold: 5
+    # run on every loop inside the warning window (anything executable)
+    warn-command: "notify-send 'App Timer' 'Only {time_left_int} minutes left'"
+    # run only on the final loop before apps are blocked
+    final-warn-command: "notify-send 'App Timer' 'Last minute before shutdown'"
+```
+
+`warn-threshold` is measured in minutes and triggers the `warn-command` every loop while there is still time remaining. `final-warn-command` fires once on the last loop before the timer exceeds its limit (based on `check-interval`). All commands are executed through the shell, so they can show desktop notifications, play sounds, etc. You can interpolate values in the command string using `{timer_name}`, `{time_left}`, `{time_left_int}`, `{time_left_floor}`, and `{time_left_seconds}` (any Python format specifiers are supported, e.g. `{time_left:.1f}`).
+
+If the systemd service runs as `root`, wrap desktop commands so they execute inside your session:
+
+```yaml
+warn-command: >
+  runuser -l randogoth -c 'DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "App Timer" "{timer_name}: {time_left_int} minutes left"'
 ```
 
 ## Installation

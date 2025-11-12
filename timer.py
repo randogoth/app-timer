@@ -12,6 +12,7 @@ def check_timers(config):
         if not timer.isRunning():
             continue
         print('Timer %s is running' % timer.name)
+        timer.maybeWarn(config.checkInterval)
         # check for off limit apps
         if timer.usage.isOffLimit():
             print('Timer %s is off limit' % timer.name)
