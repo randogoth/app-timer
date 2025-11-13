@@ -11,6 +11,10 @@ I'm using this at a raspberry pi gaming station (retropie) to enforce usage limi
 ```yaml
 # how often should the script check for apps runtime?
 check-interval: 1
+# optional http status endpoint configuration
+status-server:
+  host: 127.0.0.1
+  port: 8090
 # timers: list of apps that will be watched
 timers:
   # the app name (list key)
@@ -39,6 +43,8 @@ If the systemd service runs as `root`, wrap desktop commands so they execute ins
 warn-command: >
   runuser -l randogoth -c 'DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "App Timer" "{timer_name}: {time_left_int} minutes left"'
 ```
+
+The status server shows timer usage at `http://host:port/` (defaults `127.0.0.1:8090`). Override the bind address or port via the `status-server` block, or keep using the `APP_TIMER_STATUS_HOST` / `APP_TIMER_STATUS_PORT` environment variables if you prefer exporting them in your service unit.
 
 ## Installation
 

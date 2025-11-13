@@ -253,3 +253,21 @@ class Config(object):
         '''How often the usage check should happen'''
         interval = self.data.get('check-interval', 1)
         return int(interval)
+
+    @property
+    def statusServer(self):
+        '''Optional host/port overrides for the embedded status server'''
+        config = self.data.get('status-server') or {}
+        host = config.get('host')
+        port = config.get('port')
+        if port is None:
+            parsed_port = None
+        else:
+            try:
+                parsed_port = int(port)
+            except (TypeError, ValueError):
+                raise ValueError('status-server.port must be an integer')
+        return {
+            'host': host,
+            'port': parsed_port,
+        }

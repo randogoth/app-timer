@@ -6,9 +6,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from lib import Config
 
-STATUS_SERVER_HOST = os.environ.get('APP_TIMER_STATUS_HOST', '127.0.0.1')
-STATUS_SERVER_PORT = int(os.environ.get('APP_TIMER_STATUS_PORT', '8090'))
-
 STATUS_CONTEXT = {'config': None}
 
 
@@ -166,15 +163,32 @@ class StatusRequestHandler(BaseHTTPRequestHandler):
         print("HTTP %s - %s" % (self.log_date_time_string(), format % args))
 
 
-def start_status_server():
+def _resolve_status_server_bindings(config):
+    server_config = getattr(config, 'statusServer', {}) or {}
+    env_host = os.environ.get('APP_TIMER_STATUS_HOST')
+    env_port = os.environ.get('APP_TIMER_STATUS_PORT')
+    host = env_host or server_config.get('host') or '127.0.0.1'
+    if env_port is not None:
+        try:
+            port = int(env_port)
+        except ValueError:
+            raise ValueError('APP_TIMER_STATUS_PORT must be an integer')
+    elif server_config.get('port') is not None:
+        port = server_config['port']
+    else:
+        port = 8090
+    return host, port
+
+
+def start_status_server(host, port):
     try:
-        httpd = ThreadingHTTPServer((STATUS_SERVER_HOST, STATUS_SERVER_PORT), StatusRequestHandler)
+        httpd = ThreadingHTTPServer((host, port), StatusRequestHandler)
     except OSError as exc:
-        print('Failed to start status server on %s:%s (%s)' % (STATUS_SERVER_HOST, STATUS_SERVER_PORT, exc))
+        print('Failed to start status server on %s:%s (%s)' % (host, port, exc))
         return None
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
-    print('Status server running on http://%s:%s' % (STATUS_SERVER_HOST, STATUS_SERVER_PORT))
+    print('Status server running on http://%s:%s' % (host, port))
     return httpd
 
 def check_timers(config):
@@ -197,7 +211,8 @@ def check_timers(config):
 
 config = Config()
 STATUS_CONTEXT['config'] = config
-status_server = start_status_server()
+status_host, status_port = _resolve_status_server_bindings(config)
+status_server = start_status_server(status_host, status_port)
 while True:
     # check config changes
     if config.hasChanges():
