@@ -61,14 +61,34 @@ class Usage(object):
 
     def isOffInterval(self):
         '''Is the timer usage expired'''
+        usage_expiry = self.intervalResetTimestamp()
+        if usage_expiry is None:
+            return False
+        return time.time() >= usage_expiry
+
+    def usageStartTimestamp(self):
+        '''Start timestamp (ctime) for the current interval'''
+        if not os.path.exists(self.file):
+            return None
+        return os.path.getctime(self.file)
+
+    def intervalResetTimestamp(self):
+        '''Epoch timestamp when the usage interval resets'''
         limit_interval = self.timer.limitInterval
         if (limit_interval < 0):
-            return False
-        if not os.path.exists(self.file):
-            return False
-        usage_started = os.path.getctime(self.file)
+            return None
+        usage_started = self.usageStartTimestamp()
+        if usage_started is None:
+            return None
         usage_expiry = usage_started + (limit_interval * 60 * 60)
-        return time.time() >= usage_expiry
+        return usage_expiry
+
+    def timeUntilIntervalReset(self):
+        '''Seconds remaining until the interval resets'''
+        usage_expiry = self.intervalResetTimestamp()
+        if usage_expiry is None:
+            return None
+        return max(0, usage_expiry - time.time())
 
 
 class Timer(object):
