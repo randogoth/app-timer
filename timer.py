@@ -23,6 +23,22 @@ def _format_duration(seconds):
     return ' '.join(parts)
 
 
+def _format_minutes(minutes):
+    if minutes is None:
+        return '—'
+    try:
+        total_minutes = max(0, int(minutes))
+    except (TypeError, ValueError):
+        return '—'
+    hours, remainder = divmod(total_minutes, 60)
+    parts = []
+    if hours:
+        parts.append('%dh' % hours)
+    if remainder or not parts:
+        parts.append('%dm' % remainder)
+    return ' '.join(parts)
+
+
 def _format_recharge(hours_value, reset_seconds):
     if hours_value is None:
         return '—'
@@ -37,15 +53,15 @@ def _format_recharge(hours_value, reset_seconds):
 
 def _format_usage(used, limit):
     if limit is None:
-        return '%d min (no limit)' % used
+        return '%s (no limit)' % _format_minutes(used)
     used = max(0, used)
-    return '%d / %d min' % (used, limit)
+    return '%s / %s' % (_format_minutes(used), _format_minutes(limit))
 
 
 def _format_time_left(time_left, limit):
     if limit is None or time_left is None:
         return '—'
-    return '%d min' % max(0, int(time_left))
+    return _format_minutes(max(0, int(time_left)))
 
 
 def _collect_timer_snapshot(timer):
@@ -206,7 +222,14 @@ class StatusRequestHandler(BaseHTTPRequestHandler):
 
 
 def _resolve_status_server_bindings(config):
-    server_config = getattr(config, 'statusServer', {}) or {}
+    raw_server_config = getattr(config, 'statusServer', None)
+    config_data = getattr(config, 'data', None)
+    if raw_server_config:
+        server_config = raw_server_config or {}
+    elif isinstance(config_data, dict):
+        server_config = config_data.get('status-server') or {}
+    else:
+        server_config = {}
     env_host = os.environ.get('APP_TIMER_STATUS_HOST')
     env_port = os.environ.get('APP_TIMER_STATUS_PORT')
     host = env_host or server_config.get('host') or '127.0.0.1'
@@ -215,10 +238,15 @@ def _resolve_status_server_bindings(config):
             port = int(env_port)
         except ValueError:
             raise ValueError('APP_TIMER_STATUS_PORT must be an integer')
-    elif server_config.get('port') is not None:
-        port = server_config['port']
     else:
-        port = 8090
+        server_port = server_config.get('port')
+        if server_port is not None:
+            try:
+                port = int(server_port)
+            except (TypeError, ValueError):
+                raise ValueError('status-server.port must be an integer')
+        else:
+            port = 8090
     return host, port
 
 

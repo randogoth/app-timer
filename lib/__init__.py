@@ -51,21 +51,6 @@ class Usage(object):
             os.remove(self.file)
         self.final_warning_sent = False
 
-    def isOffLimit(self):
-        '''Is the timer usage off its limits'''
-        time_limit = self.timer.timeLimit
-        if (time_limit < 0):
-            return False
-        if self.current > time_limit:
-            return True
-
-    def isOffInterval(self):
-        '''Is the timer usage expired'''
-        usage_expiry = self.intervalResetTimestamp()
-        if usage_expiry is None:
-            return False
-        return time.time() >= usage_expiry
-
     def usageStartTimestamp(self):
         '''Start timestamp (ctime) for the current interval'''
         if not os.path.exists(self.file):
@@ -89,6 +74,21 @@ class Usage(object):
         if usage_expiry is None:
             return None
         return max(0, usage_expiry - time.time())
+
+    def isOffLimit(self):
+        '''Is the timer usage off its limits'''
+        time_limit = self.timer.timeLimit
+        if (time_limit < 0):
+            return False
+        if self.current > time_limit:
+            return True
+
+    def isOffInterval(self):
+        '''Is the timer usage expired'''
+        usage_expiry = self.intervalResetTimestamp()
+        if usage_expiry is None:
+            return False
+        return time.time() >= usage_expiry
 
 
 class Timer(object):
