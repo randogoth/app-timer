@@ -106,13 +106,55 @@ def _render_status_page(config):
   <meta charset="utf-8">
   <title>App Timer Status</title>
   <style>
-    body {{ font-family: Arial, sans-serif; padding: 1.5rem; background: #f8f8f8; }}
-    h1 {{ margin-top: 0; }}
-    table {{ border-collapse: collapse; width: 100%; background: #fff; }}
-    th, td {{ border: 1px solid #ddd; padding: 0.6rem; text-align: left; }}
-    th {{ background: #f0f0f0; }}
-    tr:nth-child(even) {{ background: #fafafa; }}
-    caption {{ text-align: left; margin-bottom: 0.5rem; font-weight: bold; }}
+    :root {{
+      color-scheme: dark;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #162033;
+      --border: rgba(148, 163, 184, 0.3);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      padding: 2rem clamp(1rem, 3vw, 3rem);
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.15), transparent 55%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      margin: 0;
+    }}
+    h1 {{
+      margin-top: 0;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }}
+    p {{ color: var(--muted); margin-top: 0.3rem; }}
+    table {{
+      border-collapse: collapse;
+      width: 100%;
+      background: var(--surface);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.55);
+      border: 1px solid var(--border);
+    }}
+    th, td {{
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1rem;
+      text-align: left;
+    }}
+    th {{
+      background: rgba(15, 23, 42, 0.65);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }}
+    tbody tr:last-child td {{ border-bottom: none; }}
+    tr:nth-child(even) {{ background: var(--surface-alt); }}
+    tr:hover {{ background: rgba(56, 189, 248, 0.08); transition: background 0.15s ease-in-out; }}
   </style>
 </head>
 <body>
