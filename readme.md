@@ -1,3 +1,5 @@
+Repository moved to [codeberg.org/randogoth/app-timer/](https://codeberg.org/randogoth/app-timer/)
+
 # App Timer (Parental Control)
 
 Control apps usage time with a command line application.
