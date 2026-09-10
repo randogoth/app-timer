@@ -1,4 +1,4 @@
-Repository moved to [codeberg.org/randogoth/app-timer/](https://codeberg.org/randogoth/app-timer/)
+Repository moved to [code.randogoth.com/randogoth/app-timer/](https://code.randogoth.com/randogoth/app-timer/)
 
 # App Timer (Parental Control)
 
